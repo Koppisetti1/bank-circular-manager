@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank Circular Manager</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f4f4f2;color:#1a1a1a;min-height:100vh}
+
+/* LOGIN */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1d4ed8 0%,#1d6fa5 50%,#0f766e 100%)}
+.login-card{background:#fff;border-radius:16px;padding:2.5rem 2rem;width:min(380px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.login-logo{width:52px;height:52px;background:#dbeafe;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem}
+.login-logo svg{width:28px;height:28px;stroke:#1d6fa5;fill:none;stroke-width:2}
+.login-card h2{text-align:center;font-size:18px;font-weight:700;color:#111;margin-bottom:.3rem}
+.login-card p{text-align:center;font-size:13px;color:#888;margin-bottom:1.6rem}
+.login-frow{margin-bottom:14px}
+.login-frow label{font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px}
+.login-frow input{width:100%;height:42px;border:1.5px solid #ddd;border-radius:9px;padding:0 12px;font-size:14px;font-family:inherit;transition:border-color .15s}
+.login-frow input:focus{outline:none;border-color:#1d6fa5}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:42px}
+.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#888;font-size:16px;line-height:1}
+.btn-login{width:100%;height:44px;background:#1d6fa5;color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
+.btn-login:hover{background:#185f8e}
+.login-error{display:none;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;font-size:13px;margin-top:12px;text-align:center;font-weight:500}
+.login-error.show{display:block}
+
+/* APP */
+#appScreen{display:none;padding:24px}
+.app{max-width:980px;margin:0 auto}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;gap:12px;flex-wrap:wrap}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;background:#dbeafe;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo svg{width:23px;height:23px;stroke:#1d6fa5;fill:none;stroke-width:2}
+h1{font-size:20px;font-weight:700;color:#111}
+.subtitle{font-size:12px;color:#888;margin-top:2px}
+.logout-btn{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e0e0dc;border-radius:8px;padding:7px 13px;font-size:12px;color:#555;cursor:pointer;font-weight:500}
+.logout-btn:hover{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.toolbar input,.toolbar select{height:38px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#111;padding:0 12px;font-size:13px}
+.toolbar input:focus,.toolbar select:focus{outline:none;border-color:#1d6fa5}
+.toolbar input{flex:1;min-width:160px}
+.btn-blue{background:#1d6fa5;color:#fff;border:none;border-radius:8px;padding:0 16px;height:38px;font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn-blue:hover{background:#185f8e}
+.btn-green{background:#166534;color:#fff;border:none;border-radius:8px;padding:0 14px;height:38px;font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn-green:hover{background:#14532d}
+.sort-btn{height:38px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#444;padding:0 12px;font-size:12px;cursor:pointer;white-space:nowrap}
+.sort-btn:hover{background:#f0f0ee}
+
+/* TABS */
+.tabs-row{display:flex;align-items:center;gap:6px;margin-bottom:.5rem;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:20px;border:1px solid #ddd;font-size:12px;cursor:pointer;background:#fff;color:#666}
+.tab.active{background:#dbeafe;color:#1d6fa5;border-color:#90bfe0;font-weight:600}
+.tab:hover:not(.active){background:#f0f0ee}
+.tab-add{padding:6px 13px;border-radius:20px;border:1px dashed #bbb;font-size:12px;cursor:pointer;background:transparent;color:#888}
+.tab-add:hover{background:#f0f0ee}
+.sort-bar{font-size:12px;color:#888;margin-bottom:10px;padding:0 2px}
+
+/* CARDS */
+.card-list{display:flex;flex-direction:column;gap:8px}
+.card{background:#fff;border:1px solid #e8e8e5;border-radius:12px;padding:14px 16px;transition:border-color .15s}
+.card:hover{border-color:#bbb}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.card-title{font-size:14px;font-weight:600;color:#111;line-height:1.4}
+.card-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.status-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.status-active{background:#dcfce7;color:#166534}
+.status-superseded{background:#fef9c3;color:#854d0e}
+.status-withdrawn{background:#fee2e2;color:#991b1b}
+.card-date{font-size:11px;color:#555;white-space:nowrap;font-weight:600;background:#f5f5f3;padding:3px 9px;border-radius:20px}
+.card-summary{font-size:12px;color:#666;margin-top:6px;line-height:1.5}
+.keywords{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.kw{background:#f0f0ee;color:#555;border-radius:20px;padding:2px 9px;font-size:11px}
+.kw.match{background:#fef3cd;color:#92650a;font-weight:500}
+.file-tag{display:inline-flex;align-items:center;gap:4px;margin-top:8px;font-size:11px;border-radius:6px;padding:3px 9px;border:1px solid}
+.file-tag.pdf{color:#c0392b;border-color:#fca5a5;background:#fff5f5}
+.file-tag.img{color:#0f766e;border-color:#99f6e4;background:#f0fdfa}
+.file-tag.word{color:#1d6fa5;border-color:#bfdbfe;background:#f0f6ff}
+.file-tag.none{color:#aaa;border-color:#e0e0dc;background:#f8f8f6}
+.card-actions{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #f0f0ee;flex-wrap:wrap}
+.btn-view{background:#fef9c3;color:#854d0e;border:1px solid #fde68a;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-weight:600}
+.btn-view:hover{background:#fef3c7}
+.btn-view:disabled{opacity:.4;cursor:not-allowed}
+.btn-edit{background:#f0f6ff;color:#1d6fa5;border:1px solid #c8dff5;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-weight:500}
+.btn-edit:hover{background:#dbeafe}
+.btn-delete{background:#fff5f5;color:#c0392b;border:1px solid #fca5a5;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-weight:500}
+.btn-delete:hover{background:#fee2e2}
+.no-results{padding:3rem;text-align:center;color:#999;font-size:13px}
+
+/* MODALS */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-box{background:#fff;border-radius:14px;padding:1.5rem;width:min(520px,96vw);max-height:92vh;overflow-y:auto;box-shadow:0 12px 50px rgba(0,0,0,.2)}
+.modal-box h2{font-size:16px;font-weight:700;margin-bottom:1rem;color:#111}
+.frow{margin-bottom:12px}
+.frow label{font-size:12px;color:#555;display:block;margin-bottom:4px;font-weight:600}
+.frow input,.frow select,.frow textarea{width:100%;border:1px solid #ddd;border-radius:8px;background:#fff;color:#111;padding:8px 10px;font-size:13px;font-family:inherit}
+.frow input:focus,.frow select:focus,.frow textarea:focus{outline:none;border-color:#1d6fa5}
+.frow textarea{min-height:70px;resize:vertical}
+.frow-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.mfooter{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
+.btn-save{background:#1d6fa5;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer;font-weight:600}
+.btn-save:hover{background:#185f8e}
+.btn-cancel{background:#fff;color:#666;border:1px solid #ddd;border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer}
+.upload-zone{border:1.5px dashed #ccc;border-radius:8px;padding:18px;text-align:center;font-size:13px;color:#888;margin-bottom:12px;cursor:pointer}
+.upload-zone:hover{background:#f8f8f6}
+.upload-zone.has-file{border-color:#4ade80;background:#f0fdf4}
+.color-picker{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.color-opt{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.color-opt.selected{border-color:#111}
+.sec-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0ee;font-size:13px}
+.sec-item:last-child{border-bottom:none}
+.del-btn{background:none;border:none;color:#c0392b;cursor:pointer;font-size:12px;padding:2px 8px;border-radius:4px}
+.del-btn:hover{background:#fee2e2}
+.hint{font-size:11px;color:#aaa;margin-top:3px}
+.divider{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px}
+.export-sec-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid #e8e8e5;border-radius:8px;font-size:13px;margin-bottom:7px}
+.btn-dl{background:#166534;color:#fff;border:none;border-radius:6px;padding:5px 13px;font-size:12px;cursor:pointer;font-weight:500}
+.btn-dl:hover{background:#14532d}
+.btn-dl-all{background:#166534;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;cursor:pointer;font-weight:700;width:100%;margin-top:4px}
+.btn-dl-all:hover{background:#14532d}
+.export-note{font-size:12px;color:#555;margin-bottom:14px;line-height:1.6;background:#f8f8f6;padding:10px 12px;border-radius:8px}
+.progress-bar-wrap{background:#f0f0ee;border-radius:20px;height:8px;margin-top:6px;overflow:hidden;display:none}
+.progress-bar{background:#166534;height:100%;border-radius:20px;transition:width .3s}
+.progress-label{font-size:11px;color:#888;margin-top:4px;display:none}
+.confirm-box{background:#fff;border-radius:14px;padding:1.5rem;width:min(360px,94vw);box-shadow:0 12px 50px rgba(0,0,0,.2);text-align:center}
+.confirm-box h3{font-size:15px;font-weight:700;color:#111;margin-bottom:.5rem}
+.confirm-box p{font-size:13px;color:#666;margin-bottom:1.2rem;line-height:1.5}
+.confirm-footer{display:flex;gap:8px;justify-content:center}
+.btn-danger{background:#c0392b;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;cursor:pointer;font-weight:600}
+.btn-danger:hover{background:#a93226}
+
+/* ===== DOCUMENT VIEWER ===== */
+#viewerBg{
+  display:none;
+  position:fixed;inset:0;
+  width:100vw;height:100vh;
+  background:rgba(0,0,0,.88);
+  z-index:9999;
+  flex-direction:column;
+  overflow:hidden;
+}
+#viewerBg.open{ display:flex; }
+.vw-header{
+  background:#1c1c1e;color:#fff;
+  padding:12px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-shrink:0;flex-wrap:wrap;
+  border-bottom:1px solid #333;
+}
+.vw-meta{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.vw-title{font-size:14px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55vw}
+.vw-sub{font-size:11px;color:#999;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px}
+.vw-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.btn-vw-dl{background:#166534;color:#fff;border:none;border-radius:7px;padding:7px 16px;font-size:12px;cursor:pointer;font-weight:600}
+.btn-vw-dl:hover{background:#14532d}
+.btn-vw-close{background:#3a3a3a;color:#fff;border:1px solid #555;border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-weight:500}
+.btn-vw-close:hover{background:#666}
+/* content area */
+.vw-body{
+  flex:1;min-height:0;
+  display:flex;flex-direction:column;
+  background:#525659;
+  position:relative;overflow:hidden;
+}
+/* PDF / iframe fills entire vw-body */
+.vw-body object,.vw-body iframe{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  border:none;display:block;
+}
+/* Image viewer */
+.vw-img-wrap{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  background:#1e1e1e;
+  overflow:auto;
+  padding:16px;
+}
+.vw-img-wrap img{
+  max-width:100%;max-height:100%;
+  object-fit:contain;
+  border-radius:4px;
+  box-shadow:0 4px 24px rgba(0,0,0,.5);
+  display:block;
+}
+/* Fallback / error cards */
+.vw-fallback{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:2rem;overflow:auto;background:#525659;
+}
+.fb-card{
+  background:#fff;border-radius:14px;
+  padding:2rem 2.5rem;text-align:center;
+  max-width:480px;width:100%;
+  box-shadow:0 8px 32px rgba(0,0,0,.3);
+}
+.fb-icon{font-size:46px;margin-bottom:12px}
+.fb-card h3{font-size:17px;font-weight:700;color:#111;margin-bottom:8px}
+.fb-card p{font-size:13px;color:#555;margin-bottom:18px;line-height:1.6}
+.fb-err{color:#991b1b;background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px;font-weight:500}
+.btn-fb-dl{background:#1d6fa5;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;cursor:pointer;font-weight:600;margin-right:8px}
+.btn-fb-dl:hover{background:#185f8e}
+/* Loading spinner */
+.vw-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#525659}
+.vw-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+<!-- PDF.js – renders PDF pages onto canvas, no iframe/blob-src CSP issues -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg></div>
+    <h2>Bank Circular Manager</h2>
+    <p>Sign in to access your circulars</p>
+    <div class="login-frow">
+      <label>User ID</label>
+      <input type="text" id="loginUser" placeholder="Enter user ID" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-frow">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="loginPass" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="pw-toggle" onclick="togglePw()">&#128065;</button>
+      </div>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="loginError">&#9940; Unauthorized Access &#8212; Invalid credentials.</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="appScreen">
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <div class="logo"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg></div>
+      <div><h1>Bank Circular Manager</h1><div class="subtitle">Organize &amp; search circulars by section and keyword</div></div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign Out
+    </button>
+  </div>
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="&#128269;  Search by title, keyword..." oninput="filterCirculars()">
+    <select id="catFilter" onchange="onCatChange()"></select>
+    <select id="yearFilter" onchange="filterCirculars()"></select>
+    <button class="sort-btn" onclick="toggleSort()">&#8661; <span id="sortLabel">Newest First</span></button>
+    <button class="btn-green" onclick="openExport()">&#11015; Export PDF</button>
+    <button class="btn-blue" onclick="openUpload()">+ Upload Circular</button>
+  </div>
+  <div class="tabs-row" id="tabsRow"></div>
+  <div class="sort-bar" id="sortBar"></div>
+  <div class="card-list" id="cardList"></div>
+</div>
+</div>
+
+<!-- DOCUMENT VIEWER (full-screen) -->
+<div id="viewerBg">
+  <div class="vw-header">
+    <div class="vw-meta">
+      <div class="vw-title" id="vwTitle">Document</div>
+      <div class="vw-sub">
+        <span id="vwSection"></span>
+        <span id="vwDate"></span>
+        <span id="vwType"></span>
+      </div>
+    </div>
+    <div class="vw-actions">
+      <button class="btn-vw-dl" onclick="viewerDownload()">&#11015; Download</button>
+      <button class="btn-vw-close" onclick="closeViewer()">&#10005; Close</button>
+    </div>
+  </div>
+  <div class="vw-body" id="vwBody"></div>
+  <!-- PDF page navigation bar (hidden for non-PDF) -->
+  <div id="vwPageBar" style="display:none;background:#1c1c1e;border-top:1px solid #333;padding:8px 16px;flex-shrink:0;display:none;align-items:center;justify-content:center;gap:12px;">
+    <button onclick="pdfGoPage(-1)" style="background:#3a3a3a;color:#fff;border:1px solid #555;border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;">&#8592; Prev</button>
+    <span id="vwPageInfo" style="font-size:12px;color:#ccc;min-width:80px;text-align:center;">Page 1 / 1</span>
+    <button onclick="pdfGoPage(1)" style="background:#3a3a3a;color:#fff;border:1px solid #555;border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;">Next &#8594;</button>
+    <select id="vwZoom" onchange="pdfSetZoom()" style="background:#3a3a3a;color:#fff;border:1px solid #555;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;">
+      <option value="0.7">70%</option>
+      <option value="1.0" selected>100%</option>
+      <option value="1.3">130%</option>
+      <option value="1.6">160%</option>
+      <option value="2.0">200%</option>
+    </select>
+  </div>
+</div>
+
+<!-- UPLOAD / EDIT MODAL -->
+<div class="modal-bg" id="uploadBg" onclick="if(event.target===this)closeUpload()">
+  <div class="modal-box">
+    <h2 id="uploadModalTitle">Add New Circular</h2>
+    <input type="hidden" id="editId" value="">
+    <div class="frow"><label>Title *</label><input type="text" id="fTitle" placeholder="Circular title or subject"></div>
+    <div class="frow-row">
+      <div class="frow" style="margin-bottom:0"><label>Section *</label><select id="fCat"></select></div>
+      <div class="frow" style="margin-bottom:0"><label>Status</label>
+        <select id="fStatus"><option value="active">Active</option><option value="superseded">Superseded</option><option value="withdrawn">Withdrawn</option></select>
+      </div>
+    </div>
+    <div class="frow" style="margin-top:12px"><label>Date Issued *</label><input type="date" id="fDate"></div>
+    <div class="frow"><label>Keywords <span style="font-weight:400;color:#aaa">(comma separated)</span></label><input type="text" id="fKeywords" placeholder="e.g. interest rate, LTV, NPA, renewal"></div>
+    <div class="frow"><label>Summary / Description</label><textarea id="fSummary" placeholder="Brief description..."></textarea></div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div>&#128206; Click to attach PDF, Word (.doc/.docx) or Image (.jpg/.png)</div>
+      <div id="fileLabel" style="margin-top:5px;font-size:12px;color:#aaa">No file selected</div>
+      <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display:none" onchange="onFileSelected(this)">
+    </div>
+    <div class="mfooter">
+      <button class="btn-cancel" onclick="closeUpload()">Cancel</button>
+      <button class="btn-save" onclick="saveCircular()">Save Circular</button>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION MODAL -->
+<div class="modal-bg" id="secBg" onclick="if(event.target===this)closeSec()">
+  <div class="modal-box" style="width:min(400px,96vw)">
+    <h2>Manage Sections</h2>
+    <div class="frow">
+      <label>New Section Name</label>
+      <input type="text" id="newSecName" placeholder="e.g. Vehicle Loans, Housing Loans, MSME..." onkeydown="if(event.key==='Enter')addSection()">
+      <div class="hint">Type name and press Enter or click Add</div>
+    </div>
+    <div class="frow"><label>Choose Colour</label><div class="color-picker" id="colorPicker"></div></div>
+    <div style="margin-bottom:1.2rem"><button class="btn-save" onclick="addSection()">+ Add Section</button></div>
+    <div class="divider">Existing Sections</div>
+    <div id="secList"></div>
+    <div class="mfooter"><button class="btn-cancel" onclick="closeSec()">Close</button></div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-bg" id="exportBg" onclick="if(event.target===this)closeExport()">
+  <div class="modal-box" style="width:min(460px,96vw)">
+    <h2>&#11015; Export as PDF</h2>
+    <div class="export-note">Each circular exports as an individual file prefixed with its section name.<br><strong>To save as PDF:</strong> Open the downloaded HTML in your browser &#8594; <strong>Ctrl+P &#8594; Save as PDF</strong>.</div>
+    <div class="divider">Export by Section</div>
+    <div id="exportSecList"></div>
+    <div class="progress-bar-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-label" id="progressLabel"></div>
+    <div class="divider" style="margin-top:14px">Export Everything</div>
+    <button class="btn-dl-all" onclick="exportAll()">&#11015; Export All Sections</button>
+    <div class="mfooter"><button class="btn-cancel" onclick="closeExport()">Close</button></div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="modal-bg" id="confirmBg">
+  <div class="confirm-box">
+    <h3>Delete Circular?</h3>
+    <p id="confirmMsg">Are you sure? This cannot be undone.</p>
+    <div class="confirm-footer">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" onclick="confirmDeleteAction()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── AUTH ── */
+const CREDS = {user:'admin', pass:'Qwerty@123'};
+let isAuth = false;
+
+function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const err=document.getElementById('loginError');
+  if(u===CREDS.user && p===CREDS.pass){
+    isAuth=true; err.classList.remove('show');
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('appScreen').style.display='block';
+    init();
+  } else {
+    isAuth=false; err.classList.add('show');
+    document.getElementById('loginPass').value='';
+    document.getElementById('loginPass').focus();
+  }
+}
+function doLogout(){
+  isAuth=false;
+  document.getElementById('appScreen').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginError').classList.remove('show');
+}
+function requireAuth(){ if(!isAuth){alert('Access denied. Please log in.');return false;} return true; }
+function togglePw(){ const i=document.getElementById('loginPass'); i.type=i.type==='password'?'text':'password'; }
+
+/* ── FILE STORE ── persisted as base64 in localStorage ── */
+const fileStore = {};  // key = circular id (number), value = {name,type,ext,buf(ArrayBuffer)}
+
+function storeFile(circId, file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      const buf=e.target.result;
+      const ext=file.name.split('.').pop().toLowerCase();
+      const type=file.type||'application/octet-stream';
+      fileStore[circId]={name:file.name,type,ext,buf};
+      // Also persist as base64 in localStorage
+      try{
+        const b64=_bufToB64(buf);
+        localStorage.setItem('bcm_file_'+circId,JSON.stringify({name:file.name,type,ext,b64}));
+      }catch(e2){ /* storage full – silent */ }
+      res();
+    };
+    r.onerror=()=>rej(new Error('Read failed'));
+    r.readAsArrayBuffer(file);
+  });
+}
+
+function _bufToB64(buf){
+  let bin=''; const bytes=new Uint8Array(buf);
+  for(let i=0;i<bytes.byteLength;i++) bin+=String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+function _b64ToBuf(b64){
+  const bin=atob(b64); const buf=new ArrayBuffer(bin.length);
+  const view=new Uint8Array(buf);
+  for(let i=0;i<bin.length;i++) view[i]=bin.charCodeAt(i);
+  return buf;
+}
+
+function loadFiles(){
+  // Restore all persisted files from localStorage into fileStore
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(key&&key.startsWith('bcm_file_')){
+      try{
+        const id=parseInt(key.replace('bcm_file_',''));
+        const obj=JSON.parse(localStorage.getItem(key));
+        if(obj&&obj.b64){
+          fileStore[id]={name:obj.name,type:obj.type,ext:obj.ext,buf:_b64ToBuf(obj.b64)};
+        }
+      }catch(e){}
+    }
+  }
+}
+
+function deleteFileStore(circId){
+  delete fileStore[circId];
+  try{ localStorage.removeItem('bcm_file_'+circId); }catch(e){}
+}
+
+function makeBlobURL(circId){
+  const e=fileStore[circId]; if(!e) return null;
+  return URL.createObjectURL(new Blob([e.buf],{type:e.type}));
+}
+
+/* ── DATA ── */
+const COLORS=[
+  {bg:'#faeeda',text:'#854f0b',border:'#ba7517'},
+  {bg:'#dbeafe',text:'#1d6fa5',border:'#60a5e8'},
+  {bg:'#dcfce7',text:'#166534',border:'#4ade80'},
+  {bg:'#ede9fe',text:'#5b21b6',border:'#a78bfa'},
+  {bg:'#f3f4f6',text:'#374151',border:'#9ca3af'},
+  {bg:'#fee2e2',text:'#991b1b',border:'#f87171'},
+  {bg:'#fce7f3',text:'#9d174d',border:'#f472b6'},
+  {bg:'#ccfbf1',text:'#065f46',border:'#34d399'},
+];
+const IMG_EXTS = new Set(['jpg','jpeg','png','gif','webp','bmp']);
+const EXT_ICONS = {pdf:'&#128196;',doc:'&#128221;',docx:'&#128221;',jpg:'&#128444;',jpeg:'&#128444;',png:'&#128444;'};
+const EXT_LABEL = {pdf:'PDF',doc:'Word (.doc)',docx:'Word (.docx)',jpg:'Image (JPG)',jpeg:'Image (JPG)',png:'Image (PNG)'};
+const STATUS_HTML = {
+  active:'<span class="status-badge status-active">&#9679; Active</span>',
+  superseded:'<span class="status-badge status-superseded">&#9679; Superseded</span>',
+  withdrawn:'<span class="status-badge status-withdrawn">&#9679; Withdrawn</span>',
+};
+
+const DEF_SECTIONS=[
+  {id:'gold',label:'Gold Loans',color:0},{id:'deposit',label:'Deposits',color:1},
+  {id:'crop',label:'Crop Loans',color:2},{id:'personal',label:'Personal Loans',color:3},{id:'other',label:'Other',color:4},
+];
+const DEF_CIRCULARS=[
+  {id:1,title:'Revised LTV norms for gold loan sanctioning',cat:'gold',date:'2024-03-12',status:'active',keywords:['LTV','gold valuation','hallmark','interest rate'],summary:'Updated LTV ratios for hallmarked and non-hallmarked gold effective April 2024.',fileName:null},
+  {id:2,title:'New interest rates for fixed deposits FY 2024-25',cat:'deposit',date:'2024-04-01',status:'active',keywords:['FD rate','senior citizen','interest','renewal'],summary:'Revised FD interest rate structure including special rates for senior citizens.',fileName:null},
+  {id:3,title:'Kharif season crop loan disbursement guidelines',cat:'crop',date:'2024-05-15',status:'active',keywords:['kharif','disbursement','crop insurance','KCC'],summary:'Procedure for crop loan disbursement under KCC for kharif season 2024.',fileName:null},
+  {id:4,title:'Gold loan auction procedure - NPA accounts',cat:'gold',date:'2024-06-10',status:'superseded',keywords:['auction','NPA','notice period','gold release'],summary:'Updated auction procedure for NPA gold loan accounts.',fileName:null},
+  {id:5,title:'Tax saving deposit scheme - new limits',cat:'deposit',date:'2024-07-01',status:'active',keywords:['tax saving','80C','5 year deposit','TDS'],summary:'Revised guidelines for 5-year tax saving deposits under section 80C.',fileName:null},
+];
+
+let sections,circulars,nextId,nextSecId;
+let selColor=0,sortOrder='desc',activeTab='',q='';
+let pendingDeleteId=null,pendingFile=null;
+
+/* ── PERSIST ── */
+function saveData(){
+  try{
+    localStorage.setItem('bcm_sections',JSON.stringify(sections));
+    localStorage.setItem('bcm_circulars',JSON.stringify(circulars));
+    localStorage.setItem('bcm_nextId',nextId);
+    localStorage.setItem('bcm_nextSecId',nextSecId);
+  }catch(e){}
+}
+function loadData(){
+  try{
+    sections =JSON.parse(localStorage.getItem('bcm_sections')) ||JSON.parse(JSON.stringify(DEF_SECTIONS));
+    circulars=JSON.parse(localStorage.getItem('bcm_circulars'))||JSON.parse(JSON.stringify(DEF_CIRCULARS));
+    nextId   =parseInt(localStorage.getItem('bcm_nextId'))||6;
+    nextSecId=parseInt(localStorage.getItem('bcm_nextSecId'))||10;
+  }catch(e){
+    sections=JSON.parse(JSON.stringify(DEF_SECTIONS));
+    circulars=JSON.parse(JSON.stringify(DEF_CIRCULARS));
+    nextId=6;nextSecId=10;
+  }
+}
+
+/* ── HELPERS ── */
+const getSec    =id=>sections.find(s=>s.id===id);
+const secLabel  =id=>{const s=getSec(id);return s?s.label:id;};
+const badgeSty  =id=>{const s=getSec(id);if(!s)return '';const c=COLORS[s.color%8];return 'background:'+c.bg+';color:'+c.text+';';};
+const fmt       =d=>{if(!d)return '-';const[y,m,day]=d.split('-');return day+'/'+m+'/'+y;};
+const safeName  =s=>s.replace(/[^a-zA-Z0-9 _\-]/g,'').replace(/\s+/g,'_').substring(0,60);
+const sortedList=list=>[...list].sort((a,b)=>sortOrder==='desc'?b.date.localeCompare(a.date):a.date.localeCompare(b.date));
+
+function fileTagHTML(circId, fileName){
+  if(fileStore[circId]){
+    const e=fileStore[circId];
+    const cls=e.ext==='pdf'?'pdf':IMG_EXTS.has(e.ext)?'img':'word';
+    return '<span class="file-tag '+cls+'">'+(EXT_ICONS[e.ext]||'&#128206;')+' '+e.name+'</span>';
+  }
+  if(fileName) return '<span class="file-tag none">&#128206; '+fileName+' <em style="color:#c0392b">(re-upload to view)</em></span>';
+  return '';
+}
+
+/* ── YEAR FILTER ── */
+function rebuildYearFilter(){
+  const years=[...new Set(circulars.map(c=>c.date?c.date.slice(0,4):null).filter(Boolean))].sort((a,b)=>b-a);
+  const el=document.getElementById('yearFilter');
+  const cur=el.value;
+  el.innerHTML='<option value="">All Years</option>'+years.map(y=>'<option value="'+y+'">'+y+'</option>').join('');
+  if(years.includes(cur)) el.value=cur;
+}
+
+/* ── TABS / SELECTS ── */
+function renderTabs(){
+  document.getElementById('tabsRow').innerHTML=
+    '<button class="tab'+(activeTab===''?' active':'')+'" onclick="setTab(\'\')">All</button>'+
+    sections.map(s=>'<button class="tab'+(activeTab===s.id?' active':'')+'" onclick="setTab(\''+s.id+'\')">'+s.label+'</button>').join('')+
+    '<button class="tab-add" onclick="openSec()">+ New Section</button>';
+}
+function rebuildSelect(id,val){
+  const el=document.getElementById(id);
+  el.innerHTML=(id==='catFilter'?'<option value="">All sections</option>':'')+
+    sections.map(s=>'<option value="'+s.id+'">'+s.label+'</option>').join('');
+  if(val!==undefined) el.value=val;
+}
+function setTab(c){activeTab=c;rebuildSelect('catFilter',c);filterCirculars();}
+function onCatChange(){activeTab=document.getElementById('catFilter').value;renderTabs();filterCirculars();}
+
+/* ── SORT ── */
+function toggleSort(){
+  sortOrder=sortOrder==='desc'?'asc':'desc';
+  document.getElementById('sortLabel').textContent=sortOrder==='desc'?'Newest First':'Oldest First';
+  filterCirculars();
+}
+
+/* ── FILTER & RENDER LIST ── */
+function filterCirculars(){
+  q=document.getElementById('searchInput').value.toLowerCase().trim();
+  const cf=document.getElementById('catFilter').value;
+  const yf=document.getElementById('yearFilter').value;
+  let list=circulars.filter(c=>{
+    const mc=!cf||c.cat===cf;
+    const my=!yf||(c.date&&c.date.startsWith(yf));
+    if(!q) return mc&&my;
+    return mc&&my&&(c.title.toLowerCase().includes(q)||c.keywords.some(k=>k.toLowerCase().includes(q))||c.summary.toLowerCase().includes(q));
+  });
+  list=sortedList(list);
+  document.getElementById('sortBar').textContent=list.length+' circular'+(list.length!==1?'s':'')+' - sorted by date issued ('+(sortOrder==='desc'?'newest first':'oldest first')+')';
+  renderList(list);
+}
+
+function renderList(list){
+  const el=document.getElementById('cardList');
+  if(!list.length){el.innerHTML='<div class="no-results">No circulars found. Try a different keyword, section, or year.</div>';return;}
+  el.innerHTML=list.map(c=>{
+    const hasFile=!!fileStore[c.id];
+    return '<div class="card" id="card-'+c.id+'">'
+      +'<div class="card-head">'
+      +'<div style="flex:1;min-width:0"><div class="card-title">'+c.title+'</div></div>'
+      +'<div class="card-right">'
+      +'<span class="badge" style="'+badgeSty(c.cat)+'">'+secLabel(c.cat)+'</span>'
+      +(STATUS_HTML[c.status||'active'])
+      +'<span class="card-date">&#128197; '+fmt(c.date)+'</span>'
+      +'</div></div>'
+      +'<div class="card-summary">'+c.summary+'</div>'
+      +'<div class="keywords">'+c.keywords.map(k=>'<span class="kw'+(q&&k.toLowerCase().includes(q)?' match':'')+'">'+k+'</span>').join('')+'</div>'
+      +fileTagHTML(c.id, c.fileName)
+      +'<div class="card-actions">'
+      +(hasFile
+        ? '<button class="btn-view" onclick="openViewer('+c.id+')">&#128065; View Document</button>'
+        : '<button class="btn-view" disabled title="Upload a file to enable preview">&#128065; View</button>')
+      +'<button class="btn-edit" onclick="openEdit('+c.id+')">&#9999; Edit</button>'
+      +'<button class="btn-delete" onclick="askDelete('+c.id+')">&#128465; Delete</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+/* ════════════════════════════════════════
+   DOCUMENT VIEWER
+════════════════════════════════════════ */
+let vwId=null, vwBlobURL=null;
+
+function openViewer(circId){
+  circId=Number(circId);
+  if(!requireAuth()) return;
+
+  const circ=circulars.find(c=>Number(c.id)===circId);
+  if(!circ){ _vwError('Circular record not found.'); return; }
+
+  const entry=fileStore[circId];
+  vwId=circId;
+
+  // Populate header
+  document.getElementById('vwTitle').textContent   = circ.title;
+  document.getElementById('vwSection').textContent = secLabel(circ.cat);
+  document.getElementById('vwDate').textContent    = fmt(circ.date);
+  document.getElementById('vwType').textContent    = entry ? (EXT_LABEL[entry.ext]||entry.ext.toUpperCase()) : '';
+
+  // Open overlay
+  const bg=document.getElementById('viewerBg');
+  bg.style.display='flex';
+
+  if(!entry){ _vwFallback(circ,'missing'); return; }
+
+  // Spinner
+  document.getElementById('vwBody').innerHTML=
+    '<div class="vw-loading"><div style="text-align:center;color:#fff"><div class="vw-spinner"></div><div style="font-size:13px;margin-top:4px">Loading document...</div></div></div>';
+
+  // Revoke old blob
+  if(vwBlobURL){ URL.revokeObjectURL(vwBlobURL); vwBlobURL=null; }
+
+  // Render after a tick so spinner paints
+  setTimeout(()=>{
+    const ext=entry.ext;
+    if(ext==='pdf')               _vwPDF(circ,entry);
+    else if(IMG_EXTS.has(ext))    _vwImage(circ,entry);
+    else if(ext==='doc'||ext==='docx') _vwWord(circ,entry);
+    else                          _vwFallback(circ,'unsupported');
+  },80);
+}
+
+/* ── PDF.js canvas renderer ── avoids ALL blob-src/iframe CSP blocks ── */
+let pdfDoc=null, pdfPage=1, pdfScale=1.0;
+
+function _vwPDF(circ,entry){
+  // Revoke any previous blob
+  if(vwBlobURL){ URL.revokeObjectURL(vwBlobURL); vwBlobURL=null; }
+
+  const body=document.getElementById('vwBody');
+  body.innerHTML='<div class="vw-loading" id="pdfSpinner"><div style="text-align:center;color:#fff"><div class="vw-spinner"></div><div style="font-size:13px;margin-top:4px">Rendering PDF...</div></div></div>';
+
+  // Show page nav bar
+  const bar=document.getElementById('vwPageBar');
+  bar.style.display='flex';
+
+  // Set PDF.js worker — use same CDN build
+  if(window.pdfjsLib){
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  } else {
+    // PDF.js not loaded — show friendly download fallback
+    _vwFallback(circ,'pdfjs_missing');
+    return;
+  }
+
+  // Read ArrayBuffer from fileStore (no blob URL needed)
+  const buf = entry.buf.slice(0); // defensive copy
+  pdfjsLib.getDocument({data: buf}).promise.then(function(pdf){
+    pdfDoc  = pdf;
+    pdfPage = 1;
+    pdfScale = parseFloat(document.getElementById('vwZoom').value)||1.0;
+    _pdfRenderPage(pdfPage);
+  }).catch(function(err){
+    body.innerHTML='<div class="vw-fallback"><div class="fb-card"><div class="fb-icon">&#128196;</div><h3>PDF Render Error</h3><p>'+err.message+'</p><button class="btn-fb-dl" onclick="viewerDownload()">&#11015; Download PDF</button><button class="btn-cancel" style="margin-left:8px" onclick="closeViewer()">Close</button></div></div>';
+  });
+}
+
+function _pdfRenderPage(pageNum){
+  if(!pdfDoc) return;
+  const body=document.getElementById('vwBody');
+  pdfDoc.getPage(pageNum).then(function(page){
+    const scale = pdfScale;
+    const vp    = page.getViewport({scale:scale});
+
+    // Build a scrollable wrapper with the canvas inside
+    body.innerHTML='<div id="pdfWrap" style="position:absolute;inset:0;overflow:auto;background:#525659;display:flex;justify-content:center;padding:16px;">'
+      +'<canvas id="pdfCanvas" style="display:block;box-shadow:0 4px 20px rgba(0,0,0,.5);background:#fff;"></canvas>'
+      +'</div>';
+
+    const canvas=document.getElementById('pdfCanvas');
+    const ctx=canvas.getContext('2d');
+    canvas.width  = vp.width;
+    canvas.height = vp.height;
+
+    page.render({canvasContext:ctx, viewport:vp}).promise.then(function(){
+      document.getElementById('vwPageInfo').textContent='Page '+pageNum+' / '+pdfDoc.numPages;
+    });
+  });
+}
+
+function pdfGoPage(delta){
+  if(!pdfDoc) return;
+  const next=pdfPage+delta;
+  if(next<1||next>pdfDoc.numPages) return;
+  pdfPage=next;
+  _pdfRenderPage(pdfPage);
+}
+
+function pdfSetZoom(){
+  pdfScale=parseFloat(document.getElementById('vwZoom').value)||1.0;
+  if(pdfDoc) _pdfRenderPage(pdfPage);
+}
+
+/* ── Image viewer – draws onto canvas to avoid blob-src CSP ── */
+function _vwImage(circ,entry){
+  if(vwBlobURL){ URL.revokeObjectURL(vwBlobURL); vwBlobURL=null; }
+  const body=document.getElementById('vwBody');
+  body.innerHTML='<div class="vw-loading"><div style="text-align:center;color:#fff"><div class="vw-spinner"></div><div style="font-size:13px;margin-top:4px">Loading image...</div></div></div>';
+
+  // Create a temporary blob URL, draw to canvas, then immediately revoke
+  const blob = new Blob([entry.buf], {type: entry.type||'image/jpeg'});
+  const tempURL = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = function(){
+    URL.revokeObjectURL(tempURL); // revoke immediately after load
+    body.innerHTML='<div class="vw-img-wrap"><canvas id="imgCanvas" style="max-width:100%;max-height:100%;border-radius:4px;box-shadow:0 4px 24px rgba(0,0,0,.5);display:block;"></canvas></div>';
+    const canvas=document.getElementById('imgCanvas');
+    // Scale down if image is larger than viewport
+    const maxW=body.clientWidth-32;
+    const maxH=body.clientHeight-32;
+    let w=img.naturalWidth, h=img.naturalHeight;
+    if(w>maxW){ const r=maxW/w; w=maxW; h=h*r; }
+    if(h>maxH){ const r=maxH/h; h=maxH; w=w*r; }
+    canvas.width=w; canvas.height=h;
+    canvas.getContext('2d').drawImage(img,0,0,w,h);
+  };
+  img.onerror = function(){
+    URL.revokeObjectURL(tempURL);
+    body.innerHTML='<div class="vw-fallback"><div class="fb-card"><div class="fb-icon">&#128444;</div><h3>Image could not be loaded</h3><button class="btn-fb-dl" onclick="viewerDownload()">&#11015; Download Image</button><button class="btn-cancel" style="margin-left:8px" onclick="closeViewer()">Close</button></div></div>';
+  };
+  img.src = tempURL;
+}
+
+function _vwWord(circ,entry){
+  document.getElementById('vwBody').innerHTML=
+    '<div class="vw-fallback"><div class="fb-card">'
+    +'<div class="fb-icon">&#128221;</div>'
+    +'<h3>'+circ.title+'</h3>'
+    +'<p>This is a <strong>Word file (.'+entry.ext+')</strong>.<br>'
+    +'Word documents cannot be rendered inside the browser.<br>'
+    +'Download the file and open it with Microsoft Word or LibreOffice.</p>'
+    +'<button class="btn-fb-dl" onclick="viewerDownload()">&#11015; Download &amp; Open in Word</button>'
+    +'<button class="btn-cancel" onclick="closeViewer()">Close</button>'
+    +'<div style="margin-top:12px;font-size:11px;color:#aaa">'+entry.name+'</div>'
+    +'</div></div>';
+}
+
+function _vwFallback(circ,reason){
+  if(reason==='missing'){
+    document.getElementById('vwBody').innerHTML=
+      '<div class="vw-fallback"><div class="fb-card">'
+      +'<div class="fb-icon">&#9888;&#65039;</div>'
+      +'<h3>Source Document Not Found</h3>'
+      +'<div class="fb-err">Error: Source document not found in the section folder.<br>The file was not uploaded in this session.</div>'
+      +'<p>Use the <strong>Edit</strong> button to re-upload the document.</p>'
+      +'<button class="btn-cancel" onclick="closeViewer()">Close</button>'
+      +'</div></div>';
+  } else {
+    document.getElementById('vwBody').innerHTML=
+      '<div class="vw-fallback"><div class="fb-card">'
+      +'<div class="fb-icon">&#128282;</div>'
+      +'<h3>Format Not Supported for Preview</h3>'
+      +'<p>This file format cannot be previewed in the browser.</p>'
+      +'<button class="btn-fb-dl" onclick="viewerDownload()">&#11015; Download to View</button>'
+      +'<button class="btn-cancel" style="margin-left:8px" onclick="closeViewer()">Close</button>'
+      +'</div></div>';
+  }
+}
+
+function _vwError(msg){
+  document.getElementById('viewerBg').style.display='flex';
+  document.getElementById('vwTitle').textContent='Error';
+  document.getElementById('vwBody').innerHTML=
+    '<div class="vw-fallback"><div class="fb-card">'
+    +'<div class="fb-icon">&#10060;</div><h3>'+msg+'</h3>'
+    +'<button class="btn-cancel" onclick="closeViewer()">Close</button>'
+    +'</div></div>';
+}
+
+function viewerDownload(){
+  if(!vwId) return;
+  const entry=fileStore[vwId];
+  if(!entry){ alert('Error: Source document not found in the section folder.'); return; }
+  const url=makeBlobURL(vwId);
+  const a=document.createElement('a');
+  a.href=url; a.download=entry.name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),600);
+}
+
+function closeViewer(){
+  document.getElementById('viewerBg').style.display='none';
+  if(vwBlobURL){ URL.revokeObjectURL(vwBlobURL); vwBlobURL=null; }
+  vwId=null; pdfDoc=null; pdfPage=1;
+  document.getElementById('vwBody').innerHTML='';
+  document.getElementById('vwPageBar').style.display='none';
+}
+
+/* ── UPLOAD / EDIT ── */
+function onFileSelected(input){
+  if(input.files[0]){
+    pendingFile=input.files[0];
+    const ext=pendingFile.name.split('.').pop().toLowerCase();
+    const lbl=document.getElementById('fileLabel');
+    lbl.textContent=(EXT_ICONS[ext]||'&#128206;')+' '+pendingFile.name;
+    lbl.style.color=ext==='pdf'?'#c0392b':IMG_EXTS.has(ext)?'#0f766e':'#1d6fa5';
+    document.getElementById('uploadZone').classList.add('has-file');
+  }
+}
+function openUpload(){
+  document.getElementById('uploadModalTitle').textContent='Add New Circular';
+  document.getElementById('editId').value='';
+  rebuildSelect('fCat');
+  ['fTitle','fKeywords','fSummary'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('fStatus').value='active';
+  document.getElementById('fileLabel').textContent='No file selected';
+  document.getElementById('fileLabel').style.color='#aaa';
+  document.getElementById('uploadZone').classList.remove('has-file');
+  document.getElementById('fileInput').value='';
+  pendingFile=null;
+  document.getElementById('uploadBg').classList.add('open');
+  document.getElementById('fTitle').focus();
+}
+function openEdit(id){
+  const c=circulars.find(x=>x.id===id); if(!c) return;
+  document.getElementById('uploadModalTitle').textContent='Edit Circular';
+  document.getElementById('editId').value=id;
+  rebuildSelect('fCat',c.cat);
+  document.getElementById('fTitle').value=c.title;
+  document.getElementById('fDate').value=c.date;
+  document.getElementById('fStatus').value=c.status||'active';
+  document.getElementById('fKeywords').value=c.keywords.join(', ');
+  document.getElementById('fSummary').value=c.summary;
+  const existing=fileStore[id];
+  const lbl=document.getElementById('fileLabel');
+  const zone=document.getElementById('uploadZone');
+  if(existing){
+    lbl.textContent='&#10004; '+existing.name+' (uploaded this session)';
+    lbl.style.color='#166534'; zone.classList.add('has-file');
+  } else if(c.fileName){
+    lbl.textContent='&#9888; '+c.fileName+' - not loaded. Select to re-upload.';
+    lbl.style.color='#854d0e'; zone.classList.remove('has-file');
+  } else {
+    lbl.textContent='No file selected'; lbl.style.color='#aaa'; zone.classList.remove('has-file');
+  }
+  document.getElementById('fileInput').value='';
+  pendingFile=null;
+  document.getElementById('uploadBg').classList.add('open');
+  document.getElementById('fTitle').focus();
+}
+function closeUpload(){ document.getElementById('uploadBg').classList.remove('open'); pendingFile=null; }
+
+async function saveCircular(){
+  const title=document.getElementById('fTitle').value.trim();
+  if(!title){alert('Please enter a title.');return;}
+  const date=document.getElementById('fDate').value;
+  if(!date){alert('Please select a date.');return;}
+  const cat   =document.getElementById('fCat').value||sections[0].id;
+  const status=document.getElementById('fStatus').value;
+  const kws   =document.getElementById('fKeywords').value.split(',').map(k=>k.trim()).filter(Boolean);
+  const summary=document.getElementById('fSummary').value.trim()||'No description provided.';
+  const eid   =document.getElementById('editId').value;
+  const circId=eid?parseInt(eid):nextId;
+  if(pendingFile) await storeFile(circId,pendingFile);
+  const existingFileName=eid?circulars.find(x=>x.id===parseInt(eid))?.fileName||null:null;
+  const finalFileName=pendingFile?pendingFile.name:existingFileName;
+  if(eid){
+    const idx=circulars.findIndex(x=>x.id===parseInt(eid));
+    if(idx!==-1) circulars[idx]={...circulars[idx],title,cat,date,status,keywords:kws,summary,fileName:finalFileName};
+  } else {
+    circulars.push({id:nextId++,title,cat,date,status,keywords:kws,summary,fileName:finalFileName});
+  }
+  saveData(); pendingFile=null; closeUpload();
+  renderTabs(); rebuildSelect('catFilter',activeTab); rebuildYearFilter(); filterCirculars();
+}
+
+/* ── DELETE ── */
+function askDelete(id){
+  const c=circulars.find(x=>x.id===id); if(!c) return;
+  pendingDeleteId=id;
+  document.getElementById('confirmMsg').textContent='Delete "'+c.title+'"? This cannot be undone.';
+  document.getElementById('confirmBg').classList.add('open');
+}
+function closeConfirm(){ document.getElementById('confirmBg').classList.remove('open'); pendingDeleteId=null; }
+function confirmDeleteAction(){
+  if(pendingDeleteId!==null){
+    deleteFileStore(pendingDeleteId);
+    circulars=circulars.filter(x=>x.id!==pendingDeleteId);
+    saveData(); closeConfirm();
+    renderTabs(); rebuildSelect('catFilter',activeTab); rebuildYearFilter(); filterCirculars();
+  }
+}
+
+/* ── SECTIONS ── */
+function renderColorPicker(){
+  document.getElementById('colorPicker').innerHTML=COLORS.map((c,i)=>
+    '<div class="color-opt'+(i===selColor?' selected':'')+'" style="background:'+c.bg+';border-color:'+(i===selColor?c.border:'transparent')+'" onclick="selColor='+i+';renderColorPicker()"></div>').join('');
+}
+function renderSecList(){
+  const el=document.getElementById('secList');
+  el.innerHTML=sections.length?sections.map(s=>{
+    const c=COLORS[s.color%8];
+    return '<div class="sec-item"><div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:'+c.bg+';border:1.5px solid '+c.border+';flex-shrink:0;display:inline-block"></span><span>'+s.label+'</span><span style="font-size:11px;color:#aaa">('+circulars.filter(x=>x.cat===s.id).length+')</span></div><button class="del-btn" onclick="delSec(\''+s.id+'\')">Remove</button></div>';
+  }).join(''):'<div style="font-size:12px;color:#aaa;padding:8px 0">No sections yet.</div>';
+}
+function addSection(){
+  const name=document.getElementById('newSecName').value.trim();
+  if(!name){alert('Please enter a section name.');return;}
+  if(sections.find(s=>s.label.toLowerCase()===name.toLowerCase())){alert('Section already exists.');return;}
+  sections.push({id:'sec_'+(nextSecId++),label:name,color:selColor});
+  document.getElementById('newSecName').value='';
+  selColor=(selColor+1)%8;
+  saveData(); renderColorPicker(); renderSecList(); renderTabs(); rebuildSelect('catFilter',activeTab);
+}
+function delSec(id){
+  const cnt=circulars.filter(x=>x.cat===id).length;
+  if(cnt){alert('Cannot remove: '+cnt+' circular(s) are in this section.');return;}
+  sections=sections.filter(s=>s.id!==id);
+  if(activeTab===id) activeTab='';
+  saveData(); renderSecList(); renderTabs(); rebuildSelect('catFilter',activeTab); filterCirculars();
+}
+function openSec(){ renderColorPicker(); renderSecList(); document.getElementById('secBg').classList.add('open'); }
+function closeSec(){ document.getElementById('secBg').classList.remove('open'); }
+
+/* ── EXPORT ── */
+function buildCircularHTML(circ){
+  const sec=getSec(circ.cat); const col=sec?COLORS[sec.color%8]:COLORS[4];
+  const today=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+  const sLabel={active:'Active',superseded:'Superseded',withdrawn:'Withdrawn'};
+  const sBg={active:'#dcfce7',superseded:'#fef9c3',withdrawn:'#fee2e2'};
+  const sClr={active:'#166534',superseded:'#854d0e',withdrawn:'#991b1b'};
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+circ.title+'</title>'
+    +'<style>body{font-family:system-ui,sans-serif;padding:40px;max-width:800px;margin:0 auto;color:#111}'
+    +'.hs{background:'+col.bg+';border-left:5px solid '+col.border+';padding:14px 18px;border-radius:8px;margin-bottom:24px}'
+    +'.sn{font-size:12px;color:'+col.text+';font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}'
+    +'.ct{font-size:20px;font-weight:700;color:#111}'
+    +'.mr{display:flex;gap:24px;margin-bottom:20px;flex-wrap:wrap}'
+    +'.mi{font-size:12px;color:#555}.mi strong{display:block;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}'
+    +'.sp{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:'+sBg[circ.status||'active']+';color:'+sClr[circ.status||'active']+'}'
+    +'.sl{font-size:13px;font-weight:700;color:#555;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid #eee;text-transform:uppercase}'
+    +'.st{font-size:14px;line-height:1.7;color:#333;margin-bottom:20px}'
+    +'.kl{display:flex;flex-wrap:wrap;gap:6px}'
+    +'.kc{background:#f0f0ee;color:#555;border-radius:20px;padding:3px 11px;font-size:12px}'
+    +'.ft{margin-top:36px;padding-top:14px;border-top:1px solid #eee;font-size:11px;color:#aaa;display:flex;justify-content:space-between}'
+    +'@media print{body{padding:20px}@page{margin:15mm}}</style></head><body>'
+    +'<div class="hs"><div class="sn">'+(sec?sec.label:'Bank Circular')+'</div><div class="ct">'+circ.title+'</div></div>'
+    +'<div class="mr">'
+    +'<div class="mi"><strong>Date Issued</strong>'+fmt(circ.date)+'</div>'
+    +'<div class="mi"><strong>Status</strong><span class="sp">'+sLabel[circ.status||'active']+'</span></div>'
+    +'<div class="mi"><strong>Section</strong>'+(sec?sec.label:'--')+'</div>'
+    +'</div>'
+    +'<div class="sl">Summary</div><div class="st">'+circ.summary+'</div>'
+    +'<div class="sl">Keywords</div>'
+    +'<div class="kl">'+circ.keywords.map(k=>'<span class="kc">'+k+'</span>').join('')+'</div>'
+    +'<div class="ft"><span>Bank Circular Manager</span><span>Exported: '+today+'</span></div>'
+    +'</body></html>';
+}
+
+function dlBlob(html,filename){
+  return new Promise(resolve=>{
+    const blob=new Blob([html],{type:'text/html'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>{ URL.revokeObjectURL(url); resolve(); },150);
+  });
+}
+
+async function exportSection(sid){
+  const sec=getSec(sid); if(!sec) return;
+  const items=sortedList(circulars.filter(c=>c.cat===sid));
+  if(!items.length){alert('No circulars in this section.');return;}
+  const folder=safeName(sec.label); const total=items.length;
+  const wrap=document.getElementById('progressWrap');
+  const bar=document.getElementById('progressBar');
+  const lbl=document.getElementById('progressLabel');
+  wrap.style.display='block'; lbl.style.display='block';
+  for(let i=0;i<items.length;i++){
+    const c=items[i];
+    bar.style.width=Math.round(((i+1)/total)*100)+'%';
+    lbl.textContent='Exporting '+(i+1)+' of '+total+': '+c.title.substring(0,50)+'...';
+    await dlBlob(buildCircularHTML(c),folder+'__'+safeName(c.title||'Circular_'+c.id)+'.html');
+    if(i<items.length-1) await new Promise(r=>setTimeout(r,300));
+  }
+  bar.style.width='100%';
+  lbl.textContent='Done - '+total+' file'+(total!==1?'s':'')+' downloaded for "'+sec.label+'"';
+  setTimeout(()=>{wrap.style.display='none';lbl.style.display='none';bar.style.width='0%';},4000);
+}
+
+async function exportAll(){
+  if(!circulars.length){alert('No circulars to export.');return;}
+  for(const s of sections){
+    if(!circulars.filter(c=>c.cat===s.id).length) continue;
+    await exportSection(s.id);
+    await new Promise(r=>setTimeout(r,500));
+  }
+}
+
+function openExport(){
+  document.getElementById('exportSecList').innerHTML=sections.map(s=>{
+    const cnt=circulars.filter(c=>c.cat===s.id).length;
+    const col=COLORS[s.color%8];
+    return '<div class="export-sec-item">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+      +'<span style="width:10px;height:10px;border-radius:50%;background:'+col.bg+';border:1.5px solid '+col.border+';flex-shrink:0;display:inline-block"></span>'
+      +'<div><span style="font-weight:600">'+s.label+'</span>'
+      +'<div style="font-size:11px;color:#aaa;margin-top:1px">Folder: <code>'+safeName(s.label)+'</code> - '+cnt+' circular'+(cnt!==1?'s':'')+'</div>'
+      +'</div></div>'
+      +'<button class="btn-dl" onclick="exportSection(\''+s.id+'\')">&#11015; Export</button>'
+      +'</div>';
+  }).join('');
+  document.getElementById('progressWrap').style.display='none';
+  document.getElementById('progressLabel').style.display='none';
+  document.getElementById('progressBar').style.width='0%';
+  document.getElementById('exportBg').classList.add('open');
+}
+function closeExport(){ document.getElementById('exportBg').classList.remove('open'); }
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(document.getElementById('viewerBg').style.display==='flex') closeViewer();
+    else if(document.getElementById('uploadBg').classList.contains('open')) closeUpload();
+    else if(document.getElementById('exportBg').classList.contains('open')) closeExport();
+    else if(document.getElementById('secBg').classList.contains('open'))    closeSec();
+    else if(document.getElementById('confirmBg').classList.contains('open')) closeConfirm();
+  }
+});
+
+/* ── INIT ── */
+function init(){
+  loadData();
+  loadFiles();   // restore persisted files from localStorage
+  renderTabs();
+  rebuildSelect('catFilter','');
+  rebuildYearFilter();
+  filterCirculars();
+}
+</script>
+</body>
+</html>
